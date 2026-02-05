@@ -1,22 +1,24 @@
-FROM node:18-alpine
+FROM node:18-bullseye
+
 WORKDIR /app
-# Copy package.json and yarn.lock first for caching
+
+# Copy dependency files first (better caching)
 COPY package.json yarn.lock ./
 
 # Install dependencies
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
-# Copy the rest of the app
+# Copy app source
 COPY . .
 
-# Generate Prisma client 
-RUN npm run generate
+# Generate Prisma client
+RUN npx prisma generate
 
-#Build the app
-RUN npm run build
+# Build the app
+RUN yarn build
 
-# Expose port
+# Expose Cloud Run port
 EXPOSE 8080
 
 # Start the app
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]
